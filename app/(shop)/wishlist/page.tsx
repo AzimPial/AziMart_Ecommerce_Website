@@ -11,7 +11,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
 
-export function WishlistPage() {
+export default function WishlistPage() {
   const { items, removeItem, getTotalItems } = useWishlistStore();
   const { addItem } = useCartStore();
   const [movingIds, setMovingIds] = useState<Set<string>>(new Set());
