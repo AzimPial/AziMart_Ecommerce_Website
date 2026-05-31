@@ -7,30 +7,23 @@ import { formatPrice } from "@/lib/utils";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { Button } from "@/components/ui/Button";
-import type { Product } from "@/types";
+import type { IProduct } from "@/types";
 
 interface ProductCardProps {
-  product: Product;
+  product: IProduct;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addItem, isInCart } = useCartStore();
   const { addItem: addToWishlist, isInWishlist, removeItem } = useWishlistStore();
-
-  const inCart = isInCart(product._id);
+  
+  const inCart = isInCart(product._id, "default");
   const inWishlist = isInWishlist(product._id);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem({
-      productId: product._id,
-      name: product.name,
-      slug: product.slug,
-      price: product.salePrice || product.price,
-      image: product.images[0],
-      qty: 1,
-    });
+    addItem(product, 1, "default");
   };
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
@@ -39,13 +32,7 @@ export function ProductCard({ product }: ProductCardProps) {
     if (inWishlist) {
       removeItem(product._id);
     } else {
-      addToWishlist({
-        productId: product._id,
-        name: product.name,
-        slug: product.slug,
-        price: product.salePrice || product.price,
-        image: product.images[0],
-      });
+      addToWishlist(product);
     }
   };
 
@@ -86,7 +73,7 @@ export function ProductCard({ product }: ProductCardProps) {
           >
             <Heart className={`h-4 w-4 ${inWishlist ? "fill-highlight text-highlight" : ""}`} />
           </Button>
-          {product.inStock && (
+          {product.stock && (
             <Button
               variant="secondary"
               size="icon"
@@ -99,7 +86,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Out of Stock Overlay */}
-        {!product.inStock && (
+        {!product.stock && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
             <span className="bg-background px-4 py-2 rounded-full text-sm font-medium">
               Out of Stock
@@ -113,7 +100,7 @@ export function ProductCard({ product }: ProductCardProps) {
         {product.name}
       </h3>
       {product.category && (
-        <p className="text-sm text-muted-foreground">{product.category.name}</p>
+        <p className="text-sm text-muted-foreground">{typeof product.category === "string" ? product.category : product.category?.name}</p>
       )}
       <div className="flex items-center gap-2 mt-1">
         {product.salePrice ? (
@@ -145,7 +132,7 @@ export function ProductCard({ product }: ProductCardProps) {
               </span>
             ))}
           </div>
-          <span className="text-xs text-muted-foreground">({product.numReviews})</span>
+          <span className="text-xs text-muted-foreground">({product.reviewCount})</span>
         </div>
       )}
     </Link>

@@ -1,9 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
-import type { Category } from "@/types";
+import type { ICategory } from "@/types";
 
 interface CategoryGridProps {
-  categories: Category[];
+  categories: ICategory[];
 }
 
 export function CategoryGrid({ categories }: CategoryGridProps) {

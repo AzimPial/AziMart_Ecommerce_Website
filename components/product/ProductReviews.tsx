@@ -10,14 +10,26 @@ import { Textarea } from "@/components/ui/Input";
 import { toast } from "sonner";
 import { reviewSchema } from "@/lib/validations";
 import { formatDate } from "@/lib/utils";
-import type { Review } from "@/types";
+import type { IReview, IUser } from "@/types";
 
 interface ProductReviewsProps {
-  reviews: Review[];
+  reviews: IReview[];
   productId: string;
   rating: number;
   numReviews: number;
 }
+
+const getUserName = (user: IReview["user"]): string => {
+  if (!user) return "Anonymous";
+  if (typeof user === "string") return "Anonymous";
+  return user.name || "Anonymous";
+};
+
+const getUserInitial = (user: IReview["user"]): string => {
+  if (!user) return "U";
+  if (typeof user === "string") return "U";
+  return user.name?.[0] || "U";
+};
 
 export function ProductReviews({
   reviews,
@@ -61,7 +73,6 @@ export function ProductReviews({
       toast.success("Review submitted successfully");
       reset();
       setUserRating(0);
-      // Optionally refresh reviews
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to submit review");
     } finally {
@@ -82,9 +93,7 @@ export function ProductReviews({
               {Array.from({ length: 5 }).map((_, i) => (
                 <span
                   key={i}
-                  className={`text-2xl ${
-                    i < Math.floor(rating) ? "text-highlight" : "text-muted"
-                  }`}
+                  className={`text-2xl ${i < Math.floor(rating) ? "text-highlight" : "text-muted"}`}
                 >
                   ★
                 </span>
@@ -100,10 +109,7 @@ export function ProductReviews({
                 <div key={star} className="flex items-center gap-2 text-sm">
                   <span className="w-8">{star} ★</span>
                   <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-highlight"
-                      style={{ width: `${percentage}%` }}
-                    />
+                    <div className="h-full bg-highlight" style={{ width: `${percentage}%` }} />
                   </div>
                   <span className="w-8 text-muted-foreground">{count}</span>
                 </div>
@@ -126,7 +132,7 @@ export function ProductReviews({
                   type="button"
                   onClick={() => {
                     setUserRating(i + 1);
-                    setValue("rating", String(i + 1));
+                    setValue("rating", i + 1);
                   }}
                   onMouseEnter={() => setHoverRating(i + 1)}
                   onMouseLeave={() => setHoverRating(0)}
@@ -134,11 +140,7 @@ export function ProductReviews({
                 >
                   <Star
                     size={24}
-                    className={`${
-                      i < (hoverRating || userRating)
-                        ? "fill-highlight text-highlight"
-                        : "text-muted"
-                    } transition-colors`}
+                    className={`${i < (hoverRating || userRating) ? "fill-highlight text-highlight" : "text-muted"} transition-colors`}
                   />
                 </button>
               ))}
@@ -148,10 +150,10 @@ export function ProductReviews({
           <div>
             <label className="block text-sm font-medium mb-2">Your Review</label>
             <Textarea
-              {...register("comment")}
+              {...register("body")}
               placeholder="Share your experience with this product..."
               rows={4}
-              error={errors.comment?.message}
+              error={errors.body?.message}
             />
           </div>
 
@@ -174,17 +176,15 @@ export function ProductReviews({
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center font-medium">
-                    {review.user?.name?.[0] || "U"}
+                    {getUserInitial(review.user)}
                   </div>
                   <div>
-                    <p className="font-medium">{review.user?.name || "Anonymous"}</p>
+                    <p className="font-medium">{getUserName(review.user)}</p>
                     <div className="flex items-center gap-1">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <span
                           key={i}
-                          className={`text-sm ${
-                            i < review.rating ? "text-highlight" : "text-muted"
-                          }`}
+                          className={`text-sm ${i < review.rating ? "text-highlight" : "text-muted"}`}
                         >
                           ★
                         </span>
@@ -196,7 +196,7 @@ export function ProductReviews({
                   {formatDate(review.createdAt)}
                 </span>
               </div>
-              <p className="text-muted-foreground">{review.comment}</p>
+              <p className="text-muted-foreground">{review.body}</p>
             </div>
           ))
         )}

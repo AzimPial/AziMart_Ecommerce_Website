@@ -10,11 +10,11 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Search, SlidersHorizontal, X, Grid, List } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
-import type { Product, Category } from "@/types";
+import type { IProduct, ICategory } from "@/types";
 
 interface ShopClientProps {
-  products: Product[];
-  categories: Category[];
+  products: IProduct[];
+  categories: ICategory[];
   totalProducts: number;
   totalPages: number;
 }
@@ -56,10 +56,15 @@ export function ShopClient({ products, categories, totalProducts, totalPages }: 
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
-      if (filters.category && product.category?.slug !== filters.category) return false;
+      if (filters.category) {
+        const categorySlug = typeof product.category === "object" && product.category !== null 
+          ? product.category.slug 
+          : product.category;
+        if (categorySlug !== filters.category) return false;
+      }
       if (filters.minPrice && product.price < Number(filters.minPrice)) return false;
       if (filters.maxPrice && product.price > Number(filters.maxPrice)) return false;
-      if (filters.inStock && !product.inStock) return false;
+      if (filters.inStock && !product.stock) return false;
       return true;
     });
   }, [products, filters]);

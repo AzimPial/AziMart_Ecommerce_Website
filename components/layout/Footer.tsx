@@ -60,7 +60,7 @@ export function Footer() {
                     href={link.href}
                     className="text-sm text-primary-foreground/70 hover:text-highlight transition-colors"
                   >
-                    {link.label}
+                    {link.name}
                   </Link>
                 </li>
               ))}
@@ -71,13 +71,13 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Customer Service</h4>
             <ul className="space-y-2">
-              {FOOTER_LINKS.customerService.map((link) => (
+              {FOOTER_LINKS.help.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
                     className="text-sm text-primary-foreground/70 hover:text-highlight transition-colors"
                   >
-                    {link.label}
+                    {link.name}
                   </Link>
                 </li>
               ))}

@@ -13,72 +13,86 @@ interface SearchParams {
   page?: string;
 }
 
+const HAS_MONGODB = !!process.env.MONGODB_URI;
+
 async function getProducts(searchParams: SearchParams) {
-  await dbConnect();
-
-  const page = Number(searchParams.page) || 1;
-  const limit = 12;
-  const skip = (page - 1) * limit;
-
-  const query: Record<string, unknown> = {};
-
-  if (searchParams.q) {
-    query.$text = { $search: searchParams.q };
+  if (!HAS_MONGODB) {
+    return { products: [], totalProducts: 0, totalPages: 0, currentPage: 1 };
   }
+  try {
+    await dbConnect();
 
-  if (searchParams.category) {
-    query["category.slug"] = searchParams.category;
+    const page = Number(searchParams.page) || 1;
+    const limit = 12;
+    const skip = (page - 1) * limit;
+
+    const query: Record<string, unknown> = {};
+
+    if (searchParams.q) {
+      query.$text = { $search: searchParams.q };
+    }
+
+    if (searchParams.category) {
+      query["category.slug"] = searchParams.category;
+    }
+
+    if (searchParams.minPrice || searchParams.maxPrice) {
+      (query as any).price = {};
+      if (searchParams.minPrice) (query as any).price.$gte = Number(searchParams.minPrice);
+      if (searchParams.maxPrice) (query as any).price.$lte = Number(searchParams.maxPrice);
+    }
+
+    if (searchParams.inStock === "true") {
+      query.inStock = true;
+    }
+
+    const sortOptions: Record<string, unknown> = {};
+    switch (searchParams.sort) {
+      case "price-asc":
+        sortOptions.price = 1;
+        break;
+      case "price-desc":
+        sortOptions.price = -1;
+        break;
+      case "rating":
+        sortOptions.rating = -1;
+        break;
+      default:
+        sortOptions.createdAt = -1;
+    }
+
+    const [products, total] = await Promise.all([
+      Product.find(query)
+        .sort(sortOptions as Record<string, 1 | -1>)
+        .skip(skip)
+        .limit(limit)
+        .populate("category")
+        .lean(),
+      Product.countDocuments(query),
+    ]);
+
+    return {
+      products: JSON.parse(JSON.stringify(products)),
+      totalProducts: total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+    };
+  } catch {
+    return { products: [], totalProducts: 0, totalPages: 0, currentPage: 1 };
   }
-
-  if (searchParams.minPrice || searchParams.maxPrice) {
-    query.price = {};
-    if (searchParams.minPrice) query.price.$gte = Number(searchParams.minPrice);
-    if (searchParams.maxPrice) query.price.$lte = Number(searchParams.maxPrice);
-  }
-
-  if (searchParams.inStock === "true") {
-    query.inStock = true;
-  }
-
-  const sortOptions: Record<string, unknown> = {};
-  switch (searchParams.sort) {
-    case "price-asc":
-      sortOptions.price = 1;
-      break;
-    case "price-desc":
-      sortOptions.price = -1;
-      break;
-    case "rating":
-      sortOptions.rating = -1;
-      break;
-    default:
-      sortOptions.createdAt = -1;
-  }
-
-  const [products, total] = await Promise.all([
-    Product.find(query)
-      .sort(sortOptions)
-      .skip(skip)
-      .limit(limit)
-      .populate("category")
-      .lean(),
-    Product.countDocuments(query),
-  ]);
-
-  return {
-    products: JSON.parse(JSON.stringify(products)),
-    totalProducts: total,
-    totalPages: Math.ceil(total / limit),
-    currentPage: page,
-  };
 }
 
 async function getCategories() {
-  await dbConnect();
-  const categories = await Category.find({ isActive: true })
-    .sort({ order: 1 })
-    .lean();
-  return JSON.parse(JSON.stringify(categories));
+  if (!HAS_MONGODB) return [];
+  try {
+    await dbConnect();
+    const categories = await Category.find({ isActive: true })
+      .sort({ order: 1 })
+      .lean();
+    return JSON.parse(JSON.stringify(categories));
+  } catch {
+    return [];
+  }
 }
 
 export default async function ShopPage({

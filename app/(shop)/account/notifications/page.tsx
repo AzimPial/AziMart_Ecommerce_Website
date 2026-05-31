@@ -1,3 +1,5 @@
+"use client";
+
 import { AccountLayout } from "@/components/user/AccountLayout";
 import { Switch } from "@/components/ui/Switch";
 import { toast } from "sonner";

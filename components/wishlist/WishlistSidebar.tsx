@@ -10,8 +10,8 @@ import Link from "next/link";
 import Image from "next/image";
 
 export function WishlistSidebar() {
-  const { items, removeItem, getTotalItems } = useWishlistStore();
-  const totalItems = getTotalItems();
+  const { items, removeItem, getItemCount } = useWishlistStore();
+  const totalItems = getItemCount();
 
   if (items.length === 0) {
     return (
@@ -36,7 +36,7 @@ export function WishlistSidebar() {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {items.map((item) => (
           <div
-            key={item.productId}
+            key={item._id}
             className="flex gap-4 bg-muted/50 rounded-lg p-3"
           >
             {/* Image */}
@@ -45,7 +45,7 @@ export function WishlistSidebar() {
               className="relative w-20 h-20 rounded-md overflow-hidden flex-shrink-0"
             >
               <Image
-                src={item.image}
+                src={item.images[0]}
                 alt={item.name}
                 fill
                 className="object-cover"
@@ -60,12 +60,12 @@ export function WishlistSidebar() {
               >
                 {item.name}
               </Link>
-              <p className="font-semibold text-sm mt-1">{formatPrice(item.price)}</p>
+              <p className="font-semibold text-sm mt-1">{formatPrice(item.salePrice || item.price)}</p>
               <Button
                 variant="ghost"
                 size="sm"
                 className="text-xs text-destructive hover:text-destructive mt-2"
-                onClick={() => removeItem(item.productId)}
+                onClick={() => removeItem(item._id)}
               >
                 <Trash2 className="h-3 w-3 mr-1" />
                 Remove

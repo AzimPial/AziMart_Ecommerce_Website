@@ -165,6 +165,7 @@ export interface ProductFilters {
   isNew?: boolean;
   onSale?: boolean;
   search?: string;
+  sort?: string;
 }
 
 export interface SortOption {

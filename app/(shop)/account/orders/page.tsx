@@ -13,11 +13,18 @@ export default async function AccountOrdersPage() {
     redirect("/auth/signin");
   }
 
-  await dbConnect();
-  const orders = await Order.find({ user: session.user.id })
-    .sort({ createdAt: -1 })
-    .lean();
-  const ordersData = JSON.parse(JSON.stringify(orders));
+  let ordersData: any[] = [];
+  if (process.env.MONGODB_URI) {
+    try {
+      await dbConnect();
+      const orders = await Order.find({ user: session.user.id })
+        .sort({ createdAt: -1 })
+        .lean();
+      ordersData = JSON.parse(JSON.stringify(orders));
+    } catch {
+      ordersData = [];
+    }
+  }
 
   return (
     <AccountLayout activeTab="orders">

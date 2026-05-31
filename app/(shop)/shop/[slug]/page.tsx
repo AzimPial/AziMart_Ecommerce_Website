@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import dbConnect from "@/lib/db";
 import Product from "@/models/Product";
 import Review from "@/models/Review";
@@ -13,37 +12,54 @@ interface ProductPageProps {
   }>;
 }
 
-async function getProduct(slug: string) {
-  await dbConnect();
-  const product = await Product.findOne({ slug })
-    .populate("category")
-    .lean();
+const HAS_MONGODB = !!process.env.MONGODB_URI;
 
-  if (!product) return null;
-  return JSON.parse(JSON.stringify(product));
+async function getProduct(slug: string) {
+  if (!HAS_MONGODB) return null;
+  try {
+    await dbConnect();
+    const product = await Product.findOne({ slug })
+      .populate("category")
+      .lean();
+
+    if (!product) return null;
+    return JSON.parse(JSON.stringify(product));
+  } catch {
+    return null;
+  }
 }
 
 async function getProductReviews(productId: string) {
-  await dbConnect();
-  const reviews = await Review.find({ product: productId })
-    .populate("user", "name")
-    .sort({ createdAt: -1 })
-    .lean();
+  if (!HAS_MONGODB) return [];
+  try {
+    await dbConnect();
+    const reviews = await Review.find({ product: productId })
+      .populate("user", "name")
+      .sort({ createdAt: -1 })
+      .lean();
 
-  return JSON.parse(JSON.stringify(reviews));
+    return JSON.parse(JSON.stringify(reviews));
+  } catch {
+    return [];
+  }
 }
 
 async function getRelatedProducts(categoryId: string, excludeId: string) {
-  await dbConnect();
-  const products = await Product.find({
-    category: categoryId,
-    _id: { $ne: excludeId },
-    inStock: true,
-  })
-    .limit(4)
-    .lean();
+  if (!HAS_MONGODB) return [];
+  try {
+    await dbConnect();
+    const products = await Product.find({
+      category: categoryId,
+      _id: { $ne: excludeId },
+      inStock: true,
+    })
+      .limit(4)
+      .lean();
 
-  return JSON.parse(JSON.stringify(products));
+    return JSON.parse(JSON.stringify(products));
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: ProductPageProps) {
@@ -95,31 +111,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       </div>
 
       {/* Related Products */}
-      {relatedProducts.length > 0 && (
-        <div className="mt-16">
-          <h2 className="text-2xl font-bold mb-6">Related Products</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {relatedProducts.map((p: typeof product) => (
-              <a key={p._id} href={`/shop/${p.slug}`} className="group">
-                <div className="relative aspect-square rounded-lg overflow-hidden bg-muted mb-3">
-                  {p.images[0] && (
-                    <Image
-                      src={p.images[0]}
-                      alt={p.name}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  )}
-                </div>
-                <h3 className="font-medium group-hover:text-highlight transition-colors line-clamp-1">
-                  {p.name}
-                </h3>
-                <p className="font-semibold mt-1">${p.price}</p>
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
+      <RelatedProducts products={relatedProducts} />
     </div>
   );
 }

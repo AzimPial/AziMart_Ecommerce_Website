@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { IProduct, ProductFilters, PaginatedResponse } from "@/types";
+import { IProduct, ProductFilters } from "@/types";
 
 export function useProducts() {
   const [products, setProducts] = useState<IProduct[]>([]);
@@ -29,10 +29,10 @@ export function useProducts() {
       if (filters?.isNew) params.set("isNew", "true");
       if (filters?.onSale) params.set("onSale", "true");
       if (filters?.search) params.set("search", filters.search);
-      if (filters && "sort" in filters && filters.sort) params.set("sort", filters.sort);
+      if (filters?.sort) params.set("sort", filters.sort);
 
       const response = await fetch(`/api/products?${params.toString()}`);
-      const data: PaginatedResponse<IProduct> = await response.json();
+      const data = await response.json();
 
       if (data.success) {
         setProducts(data.data);

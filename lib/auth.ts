@@ -22,12 +22,6 @@ declare module "next-auth" {
   }
 }
 
-declare module "next-auth/jwt" {
-  interface JWT {
-    role: "user" | "admin";
-  }
-}
-
 export const authOptions = {
   providers: [
     Google({
@@ -105,7 +99,7 @@ export const authOptions = {
     error: "/signin",
   },
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as const,
     maxAge: 30 * 24 * 60 * 60,
   },
   trustHost: true,
@@ -127,7 +121,7 @@ export async function requireAuth() {
 
 export async function requireAdmin() {
   const session = await requireAuth();
-  if (session.user.role !== "admin" && session.user.role !== "superadmin") {
+  if (session.user.role !== "admin") {
     throw new Error("Forbidden");
   }
   return session;

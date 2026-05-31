@@ -10,10 +10,10 @@ import Link from "next/link";
 
 export function CartSidebar() {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const { items, updateQuantity, removeItem, getSubtotal, getTotalItems } = useCartStore();
+  const { items, updateQty, removeItem, getTotal, getItemCount } = useCartStore();
 
-  const subtotal = getSubtotal();
-  const totalItems = getTotalItems();
+  const subtotal = getTotal();
+  const totalItems = getItemCount();
 
   if (items.length === 0) {
     return (
@@ -42,14 +42,14 @@ export function CartSidebar() {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {items.map((item) => (
           <div
-            key={`${item.productId}-${item.size}`}
+            key={`${item.product._id}-${item.size}`}
             className="flex gap-4 bg-muted/50 rounded-lg p-3"
           >
             {/* Image */}
-            <Link href={`/shop/${item.slug}`} className="relative w-20 h-20 rounded-md overflow-hidden flex-shrink-0">
+            <Link href={`/shop/${item.product.slug}`} className="relative w-20 h-20 rounded-md overflow-hidden flex-shrink-0">
               <img
-                src={item.image}
-                alt={item.name}
+                src={item.product.images[0]}
+                alt={item.product.name}
                 className="w-full h-full object-cover"
               />
             </Link>
@@ -57,15 +57,15 @@ export function CartSidebar() {
             {/* Details */}
             <div className="flex-1 min-w-0">
               <Link
-                href={`/shop/${item.slug}`}
+                href={`/shop/${item.product.slug}`}
                 className="font-medium text-sm hover:text-highlight line-clamp-1"
               >
-                {item.name}
+                {item.product.name}
               </Link>
               {item.size && (
                 <p className="text-xs text-muted-foreground mt-0.5">Size: {item.size}</p>
               )}
-              <p className="font-semibold text-sm mt-1">{formatPrice(item.price)}</p>
+              <p className="font-semibold text-sm mt-1">{formatPrice(item.product.salePrice || item.product.price)}</p>
 
               {/* Quantity Controls */}
               <div className="flex items-center gap-2 mt-2">
@@ -74,7 +74,7 @@ export function CartSidebar() {
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7"
-                    onClick={() => updateQuantity(item.productId, item.qty - 1)}
+                    onClick={() => updateQty(item.product._id, item.size, item.qty - 1)}
                   >
                     <Minus className="h-3 w-3" />
                   </Button>
@@ -83,7 +83,7 @@ export function CartSidebar() {
                     variant="ghost"
                     size="icon"
                     className="h-7 w-7"
-                    onClick={() => updateQuantity(item.productId, item.qty + 1)}
+                    onClick={() => updateQty(item.product._id, item.size, item.qty + 1)}
                   >
                     <Plus className="h-3 w-3" />
                   </Button>
@@ -92,7 +92,7 @@ export function CartSidebar() {
                   variant="ghost"
                   size="sm"
                   className="text-xs text-destructive hover:text-destructive"
-                  onClick={() => removeItem(item.productId)}
+                  onClick={() => removeItem(item.product._id, item.size)}
                 >
                   Remove
                 </Button>

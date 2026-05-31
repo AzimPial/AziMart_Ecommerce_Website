@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Order from "@/models/Order";
-import { OrderItem, IOrderDocument } from "@/models/Order";
+import { IOrderItem, IOrderDocument } from "@/models/Order";
 
 export async function GET(req: NextRequest) {
   try {
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
     await dbConnect();
 
-    const orderItems: OrderItem[] = items.map((item: {
+    const orderItems: IOrderItem[] = items.map((item: {
       productId: string;
       name: string;
       price: number;

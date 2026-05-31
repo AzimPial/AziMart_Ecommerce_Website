@@ -64,7 +64,7 @@ export function MobileMenu() {
                     className="block px-4 py-3 text-lg font-medium hover:bg-muted rounded-lg transition-colors"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    {link.label}
+                    {link.name}
                   </Link>
                 </li>
               ))}

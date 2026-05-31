@@ -26,15 +26,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Coupon has expired" }, { status: 400 });
     }
 
-    if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+    if (coupon.maxUses && coupon.usedCount >= coupon.maxUses) {
       return NextResponse.json({ error: "Coupon usage limit reached" }, { status: 400 });
     }
 
     return NextResponse.json({
       code: coupon.code,
-      discountType: coupon.discountType,
-      discountValue: coupon.discountValue,
-      minOrderValue: coupon.minOrderValue,
+      discountType: coupon.type,
+      discountValue: coupon.value,
+      minOrderValue: coupon.minOrder,
     });
   } catch (error) {
     console.error("Error validating coupon:", error);

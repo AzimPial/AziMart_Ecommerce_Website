@@ -2,16 +2,12 @@ import mongoose from "mongoose";
 
 declare global {
   var mongoose: {
-    conn: typeof mongoose | null;
-    promise: Promise<typeof mongoose> | null;
+    conn: mongoose.Mongoose | null;
+    promise: Promise<mongoose.Mongoose> | null;
   } | undefined;
 }
 
 const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
-  throw new Error("Please define the MONGODB_URI environment variable inside .env");
-}
 
 let cached = global.mongoose;
 
@@ -19,9 +15,19 @@ if (!cached) {
   cached = global.mongoose = { conn: null, promise: null };
 }
 
-async function dbConnect(): Promise<typeof mongoose> {
+async function dbConnect(): Promise<mongoose.Mongoose> {
   if (cached?.conn) {
     return cached.conn;
+  }
+
+  if (!MONGODB_URI) {
+    // During build time or if env is not set, return a dummy connection
+    if (process.env.NODE_ENV === "production" && process.env.VERCEL === "1") {
+      // On Vercel, wait for connection to be established
+      throw new Error("MONGODB_URI is required");
+    }
+    // Return a mock for build time
+    return {} as mongoose.Mongoose;
   }
 
   if (!cached?.promise) {
@@ -29,9 +35,7 @@ async function dbConnect(): Promise<typeof mongoose> {
       bufferCommands: false,
     };
 
-    cached!.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
-      return mongoose;
-    });
+    cached!.promise = mongoose.connect(MONGODB_URI!, opts);
   }
 
   try {

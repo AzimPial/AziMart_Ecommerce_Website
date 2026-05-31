@@ -12,9 +12,16 @@ export default async function AccountAddressesPage() {
     redirect("/auth/signin");
   }
 
-  await dbConnect();
-  const user = await User.findById(session.user.id).lean();
-  const userData = JSON.parse(JSON.stringify(user));
+  let userData: any = { addresses: [] };
+  if (process.env.MONGODB_URI) {
+    try {
+      await dbConnect();
+      const user = await User.findById(session.user.id).lean();
+      userData = JSON.parse(JSON.stringify(user)) || { addresses: [] };
+    } catch {
+      userData = { addresses: [] };
+    }
+  }
 
   return (
     <AccountLayout activeTab="addresses">

@@ -3,10 +3,10 @@ import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { formatPrice } from "@/lib/utils";
-import type { Product } from "@/types";
+import type { IProduct } from "@/types";
 
 interface NewArrivalsProps {
-  products: Product[];
+  products: IProduct[];
 }
 
 export function NewArrivals({ products }: NewArrivalsProps) {

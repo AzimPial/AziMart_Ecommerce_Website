@@ -8,10 +8,10 @@ import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { formatPrice, slugify } from "@/lib/utils";
 import { toast } from "sonner";
-import type { Product } from "@/types";
+import type { IProduct } from "@/types";
 
 interface ProductInfoProps {
-  product: Product;
+  product: IProduct;
 }
 
 export function ProductInfo({ product }: ProductInfoProps) {
@@ -22,7 +22,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const { addItem, isInCart } = useCartStore();
   const { addItem: addToWishlist, isInWishlist, removeItem } = useWishlistStore();
 
-  const inCart = isInCart(product._id);
+  const inCart = isInCart(product._id, selectedSize || "default");
   const inWishlist = isInWishlist(product._id);
 
   const handleAddToCart = () => {
@@ -31,16 +31,8 @@ export function ProductInfo({ product }: ProductInfoProps) {
       return;
     }
 
-    addItem({
-      productId: product._id,
-      name: product.name,
-      slug: product.slug,
-      price: product.salePrice || product.price,
-      image: product.images[0],
-      size: selectedSize || undefined,
-      qty: quantity,
-    });
-
+    const size = (selectedSize as unknown as string) || "default";
+    addItem(product, quantity, size);
     toast.success(`${product.name} added to cart`);
   };
 
@@ -49,13 +41,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
       removeItem(product._id);
       toast.info("Removed from wishlist");
     } else {
-      addToWishlist({
-        productId: product._id,
-        name: product.name,
-        slug: product.slug,
-        price: product.salePrice || product.price,
-        image: product.images[0],
-      });
+      addToWishlist(product);
       toast.success("Added to wishlist");
     }
   };
@@ -71,6 +57,11 @@ export function ProductInfo({ product }: ProductInfoProps) {
       await navigator.clipboard.writeText(window.location.href);
       toast.success("Link copied to clipboard");
     }
+  };
+
+  const getCategoryName = () => {
+    if (typeof product.category === "string") return product.category;
+    return product.category?.name;
   };
 
   return (
@@ -122,7 +113,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
           <div>
             {product.category && (
               <p className="text-sm text-muted-foreground mb-1">
-                {product.category.name}
+                {getCategoryName()}
               </p>
             )}
             <h1 className="text-2xl md:text-3xl font-bold">{product.name}</h1>
@@ -153,7 +144,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
               ))}
             </div>
             <span className="text-sm text-muted-foreground">
-              {product.rating} ({product.numReviews} reviews)
+              {product.rating} ({product.reviewCount} reviews)
             </span>
           </div>
         )}
@@ -187,15 +178,15 @@ export function ProductInfo({ product }: ProductInfoProps) {
             <div className="flex flex-wrap gap-2">
               {product.sizes.map((size) => (
                 <button
-                  key={size}
-                  onClick={() => setSelectedSize(size)}
+                  key={size as unknown as string}
+                  onClick={() => setSelectedSize(size as unknown as string)}
                   className={`px-4 py-2 border rounded-md transition-colors ${
-                    selectedSize === size
+                    selectedSize === (size as unknown as string)
                       ? "border-highlight bg-highlight text-white"
                       : "border-input hover:border-highlight"
                   }`}
                 >
-                  {size}
+                  {size as unknown as string}
                 </button>
               ))}
             </div>
@@ -225,7 +216,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
               </Button>
             </div>
             <span className="text-sm text-muted-foreground">
-              {product.inStock ? "In Stock" : "Out of Stock"}
+              {product.stock ? "In Stock" : "Out of Stock"}
             </span>
           </div>
         </div>
@@ -236,7 +227,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
             size="lg"
             className="flex-1"
             onClick={handleAddToCart}
-            disabled={!product.inStock}
+            disabled={!product.stock}
             variant={inCart ? "outline" : "highlight"}
           >
             {inCart ? "Add Another" : "Add to Cart"}

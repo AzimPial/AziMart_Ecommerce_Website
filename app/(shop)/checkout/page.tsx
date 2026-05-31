@@ -33,9 +33,9 @@ export default function CheckoutPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { items, getSubtotal, clearCart } = useCartStore();
+  const { items, getTotal, clearCart } = useCartStore();
 
-  const subtotal = getSubtotal();
+  const subtotal = getTotal();
   const shipping = subtotal >= 100 ? 0 : 9.99;
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
@@ -229,11 +229,11 @@ export default function CheckoutPage() {
             <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
             <div className="space-y-4">
               {items.map((item) => (
-                <div key={item.productId} className="flex gap-3">
+                <div key={item.product._id} className="flex gap-3">
                   <div className="relative w-16 h-16 rounded-md overflow-hidden bg-muted flex-shrink-0">
                     <Image
-                      src={item.image}
-                      alt={item.name}
+                      src={item.product.images[0]}
+                      alt={item.product.name}
                       fill
                       className="object-cover"
                     />
@@ -242,10 +242,10 @@ export default function CheckoutPage() {
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium line-clamp-1">{item.name}</p>
+                    <p className="text-sm font-medium line-clamp-1">{item.product.name}</p>
                     {item.size && <p className="text-xs text-muted-foreground">Size: {item.size}</p>}
                   </div>
-                  <p className="text-sm font-semibold">{formatPrice(item.price * item.qty)}</p>
+                  <p className="text-sm font-semibold">{formatPrice(item.product.salePrice || item.product.price * item.qty)}</p>
                 </div>
               ))}
             </div>

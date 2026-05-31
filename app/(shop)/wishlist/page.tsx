@@ -12,29 +12,22 @@ import Image from "next/image";
 import { toast } from "sonner";
 
 export default function WishlistPage() {
-  const { items, removeItem, getTotalItems } = useWishlistStore();
+  const { items, removeItem, getItemCount } = useWishlistStore();
   const { addItem } = useCartStore();
   const [movingIds, setMovingIds] = useState<Set<string>>(new Set());
 
-  const totalItems = getTotalItems();
+  const totalItems = getItemCount();
 
   const handleMoveToCart = async (item: typeof items[0]) => {
-    setMovingIds((prev) => new Set([...prev, item.productId]));
+    setMovingIds((prev) => new Set([...prev, item._id]));
     try {
-      addItem({
-        productId: item.productId,
-        name: item.name,
-        slug: item.slug,
-        price: item.price,
-        image: item.image,
-        qty: 1,
-      });
-      removeItem(item.productId);
+      addItem(item, 1, "");
+      removeItem(item._id);
       toast.success(`${item.name} added to cart`);
     } finally {
       setMovingIds((prev) => {
         const next = new Set(prev);
-        next.delete(item.productId);
+        next.delete(item._id);
         return next;
       });
     }
@@ -72,7 +65,7 @@ export default function WishlistPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {items.map((item) => (
           <div
-            key={item.productId}
+            key={item._id}
             className="group border rounded-lg overflow-hidden"
           >
             {/* Image */}
@@ -81,7 +74,7 @@ export default function WishlistPage() {
               className="relative aspect-square bg-muted block overflow-hidden"
             >
               <Image
-                src={item.image}
+                src={item.images[0]}
                 alt={item.name}
                 fill
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -90,7 +83,7 @@ export default function WishlistPage() {
                 className="absolute top-2 right-2 p-2 rounded-full bg-white/90 text-destructive hover:bg-white transition-colors"
                 onClick={(e) => {
                   e.preventDefault();
-                  removeItem(item.productId);
+                  removeItem(item._id);
                 }}
               >
                 <Trash2 className="h-4 w-4" />
@@ -111,7 +104,7 @@ export default function WishlistPage() {
                 className="w-full mt-4"
                 size="sm"
                 onClick={() => handleMoveToCart(item)}
-                isLoading={movingIds.has(item.productId)}
+                isLoading={movingIds.has(item._id)}
               >
                 <ShoppingBag className="h-4 w-4 mr-2" />
                 Add to Cart

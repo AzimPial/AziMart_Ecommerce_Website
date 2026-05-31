@@ -12,9 +12,16 @@ export default async function AccountProfilePage() {
     redirect("/auth/signin");
   }
 
-  await dbConnect();
-  const user = await User.findById(session.user.id).lean();
-  const userData = JSON.parse(JSON.stringify(user));
+  let userData: any = { firstName: "", lastName: "", email: "", phone: "", createdAt: new Date(), orderCount: 0 };
+  if (process.env.MONGODB_URI) {
+    try {
+      await dbConnect();
+      const user = await User.findById(session.user.id).lean();
+      userData = JSON.parse(JSON.stringify(user)) || userData;
+    } catch {
+      // Keep defaults
+    }
+  }
 
   return (
     <AccountLayout activeTab="profile">
@@ -50,7 +57,7 @@ export default async function AccountProfilePage() {
         <dl className="space-y-2 text-sm">
           <div className="flex justify-between">
             <dt className="text-muted-foreground">Member since</dt>
-            <dd>{new Date(userData.createdAt).toLocaleDateString()}</dd>
+            <dd>{userData.createdAt ? new Date(userData.createdAt).toLocaleDateString() : "N/A"}</dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-muted-foreground">Total orders</dt>

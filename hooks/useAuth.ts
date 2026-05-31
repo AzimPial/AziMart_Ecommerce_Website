@@ -67,7 +67,7 @@ export function useAuth() {
     router.push("/");
   }, [router]);
 
-  const isAdmin = session?.user?.role === "admin" || session?.user?.role === "superadmin";
+  const isAdmin = session?.user?.role === "admin";
   const isAuthenticated = !!session?.user;
 
   return {
