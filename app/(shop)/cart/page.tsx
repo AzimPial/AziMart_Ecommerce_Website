@@ -12,15 +12,15 @@ import Link from "next/link";
 import Image from "next/image";
 
 export default function CartPage() {
-  const { items, updateQuantity, removeItem, getSubtotal, getTotalItems, clearCart } = useCartStore();
+  const { items, updateQty, removeItem, getTotal, getItemCount, clearCart } = useCartStore();
   const { addItem: addToWishlist } = useWishlistStore();
-  const { openWishlist } = useUIStore();
+  const { setWishlistOpen } = useUIStore();
 
   const [promoCode, setPromoCode] = useState("");
   const [promoDiscount, setPromoDiscount] = useState(0);
 
-  const subtotal = getSubtotal();
-  const totalItems = getTotalItems();
+  const subtotal = getTotal();
+  const totalItems = getItemCount();
   const shipping = subtotal >= 100 ? 0 : 9.99;
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax - promoDiscount;
@@ -33,14 +33,8 @@ export default function CartPage() {
   };
 
   const handleMoveToWishlist = (item: typeof items[0]) => {
-    addToWishlist({
-      productId: item.productId,
-      name: item.name,
-      slug: item.slug,
-      price: item.price,
-      image: item.image,
-    });
-    removeItem(item.productId);
+    addToWishlist(item.product);
+    removeItem(item.product._id, item.size);
   };
 
   if (items.length === 0) {
@@ -52,9 +46,9 @@ export default function CartPage() {
           <p className="text-muted-foreground mb-6">
             Looks like you haven't added any items to your cart yet.
           </p>
-          <Button asChild>
-            <Link href="/shop">Start Shopping</Link>
-          </Button>
+          <Link href="/shop" className="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+            Start Shopping
+          </Link>
         </div>
       </div>
     );
@@ -76,79 +70,82 @@ export default function CartPage() {
             </div>
 
             <div className="divide-y">
-              {items.map((item) => (
-                <div key={`${item.productId}-${item.size}`} className="p-4 grid grid-cols-6 gap-4 items-center">
-                  {/* Product */}
-                  <div className="col-span-3 flex gap-4">
-                    <Link href={`/shop/${item.slug}`} className="relative w-20 h-20 rounded-md overflow-hidden flex-shrink-0 bg-muted">
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        className="object-cover"
-                      />
-                    </Link>
-                    <div className="flex-1 min-w-0">
-                      <Link
-                        href={`/shop/${item.slug}`}
-                        className="font-medium hover:text-highlight line-clamp-1"
-                      >
-                        {item.name}
+              {items.map((item) => {
+                const price = item.product.salePrice || item.product.price;
+                return (
+                  <div key={`${item.product._id}-${item.size}`} className="p-4 grid grid-cols-6 gap-4 items-center">
+                    {/* Product */}
+                    <div className="col-span-3 flex gap-4">
+                      <Link href={`/shop/${item.product.slug}`} className="relative w-20 h-20 rounded-md overflow-hidden flex-shrink-0 bg-muted">
+                        <Image
+                          src={item.product.images?.[0] || item.product.thumbnail}
+                          alt={item.product.name}
+                          fill
+                          className="object-cover"
+                        />
                       </Link>
-                      {item.size && (
-                        <p className="text-sm text-muted-foreground mt-0.5">Size: {item.size}</p>
-                      )}
-                      <div className="flex gap-2 mt-2">
-                        <button
-                          className="text-sm text-muted-foreground hover:text-foreground"
-                          onClick={() => handleMoveToWishlist(item)}
+                      <div className="flex-1 min-w-0">
+                        <Link
+                          href={`/shop/${item.product.slug}`}
+                          className="font-medium hover:text-highlight line-clamp-1"
                         >
-                          Move to wishlist
-                        </button>
-                        <button
-                          className="text-sm text-destructive hover:text-destructive"
-                          onClick={() => removeItem(item.productId)}
-                        >
-                          Remove
-                        </button>
+                          {item.product.name}
+                        </Link>
+                        {item.size && (
+                          <p className="text-sm text-muted-foreground mt-0.5">Size: {item.size}</p>
+                        )}
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            className="text-sm text-muted-foreground hover:text-foreground"
+                            onClick={() => handleMoveToWishlist(item)}
+                          >
+                            Move to wishlist
+                          </button>
+                          <button
+                            className="text-sm text-destructive hover:text-destructive"
+                            onClick={() => removeItem(item.product._id, item.size)}
+                          >
+                            Remove
+                          </button>
+                        </div>
                       </div>
                     </div>
+
+                    {/* Price */}
+                    <span>{formatPrice(price)}</span>
+
+                    {/* Quantity */}
+                    <div className="flex items-center border rounded-md">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => updateQty(item.product._id, item.size, item.qty - 1)}
+                        disabled={item.qty <= 1}
+                      >
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                      <span className="w-8 text-center text-sm">{item.qty}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => updateQty(item.product._id, item.size, item.qty + 1)}
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </div>
+
+                    {/* Total */}
+                    <span className="font-semibold">{formatPrice(price * item.qty)}</span>
                   </div>
-
-                  {/* Price */}
-                  <span>{formatPrice(item.price)}</span>
-
-                  {/* Quantity */}
-                  <div className="flex items-center border rounded-md">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => updateQuantity(item.productId, item.qty - 1)}
-                      disabled={item.qty <= 1}
-                    >
-                      <Minus className="h-3 w-3" />
-                    </Button>
-                    <span className="w-8 text-center text-sm">{item.qty}</span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => updateQuantity(item.productId, item.qty + 1)}
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
-                  </div>
-
-                  {/* Total */}
-                  <span className="font-semibold">{formatPrice(item.price * item.qty)}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
           <div className="flex justify-between items-center mt-4">
-            <Button variant="outline" onClick={() => openWishlist()}>
+            <Button variant="outline" onClick={() => setWishlistOpen(true)}>
               <Heart className="h-4 w-4 mr-2" />
               Continue Shopping
             </Button>
@@ -202,12 +199,10 @@ export default function CartPage() {
               </div>
             </div>
 
-            <Button className="w-full mt-6" size="lg" asChild>
-              <Link href="/checkout">
-                Proceed to Checkout
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Link>
-            </Button>
+            <Link href="/checkout" className="inline-flex items-center justify-center w-full rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8">
+              Proceed to Checkout
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Link>
 
             <p className="text-xs text-muted-foreground text-center mt-4">
               Secure checkout powered by Stripe
