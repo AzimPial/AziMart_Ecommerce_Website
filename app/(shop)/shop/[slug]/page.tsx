@@ -5,6 +5,7 @@ import Review from "@/models/Review";
 import { ProductInfo } from "@/components/product/ProductInfo";
 import { ProductReviews } from "@/components/product/ProductReviews";
 import { RelatedProducts } from "@/components/product/RelatedProducts";
+import { getProductBySlug, getRelatedProducts, MOCK_PRODUCTS } from "@/lib/mockData";
 
 interface ProductPageProps {
   params: Promise<{
@@ -15,7 +16,9 @@ interface ProductPageProps {
 const HAS_MONGODB = !!process.env.MONGODB_URI;
 
 async function getProduct(slug: string) {
-  if (!HAS_MONGODB) return null;
+  if (!HAS_MONGODB) {
+    return getProductBySlug(slug) || null;
+  }
   try {
     await dbConnect();
     const product = await Product.findOne({ slug })
@@ -25,7 +28,7 @@ async function getProduct(slug: string) {
     if (!product) return null;
     return JSON.parse(JSON.stringify(product));
   } catch {
-    return null;
+    return getProductBySlug(slug) || null;
   }
 }
 
@@ -44,14 +47,22 @@ async function getProductReviews(productId: string) {
   }
 }
 
-async function getRelatedProducts(categoryId: string, excludeId: string) {
-  if (!HAS_MONGODB) return [];
+async function getRelatedProductsData(category: string | { _id: string; name: string }, excludeId: string) {
+  if (!HAS_MONGODB) {
+    const catName = typeof category === 'string' ? category : category.name;
+    return MOCK_PRODUCTS
+      .filter(p => {
+        const pCat = typeof p.category === 'string' ? p.category : p.category.name;
+        return pCat === catName && p._id !== excludeId;
+      })
+      .slice(0, 4);
+  }
   try {
     await dbConnect();
+    const catId = typeof category === 'string' ? category : category._id;
     const products = await Product.find({
-      category: categoryId,
+      category: catId,
       _id: { $ne: excludeId },
-      inStock: true,
     })
       .limit(4)
       .lean();
@@ -93,7 +104,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const [reviews, relatedProducts] = await Promise.all([
     getProductReviews(product._id),
-    product.category ? getRelatedProducts(product.category._id, product._id) : [],
+    product.category ? getRelatedProductsData(product.category, product._id) : [],
   ]);
 
   return (
@@ -106,7 +117,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           reviews={reviews}
           productId={product._id}
           rating={product.rating}
-          numReviews={product.numReviews}
+          numReviews={product.reviewCount}
         />
       </div>
 

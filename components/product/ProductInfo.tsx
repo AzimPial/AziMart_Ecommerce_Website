@@ -31,7 +31,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
       return;
     }
 
-    const size = (selectedSize as unknown as string) || "default";
+    const size = selectedSize || "default";
     addItem(product, quantity, size);
     toast.success(`${product.name} added to cart`);
   };
@@ -176,19 +176,22 @@ export function ProductInfo({ product }: ProductInfoProps) {
           <div>
             <h3 className="font-medium mb-3">Select Size</h3>
             <div className="flex flex-wrap gap-2">
-              {product.sizes.map((size) => (
-                <button
-                  key={size as unknown as string}
-                  onClick={() => setSelectedSize(size as unknown as string)}
-                  className={`px-4 py-2 border rounded-md transition-colors ${
-                    selectedSize === (size as unknown as string)
-                      ? "border-highlight bg-highlight text-white"
-                      : "border-input hover:border-highlight"
-                  }`}
-                >
-                  {size as unknown as string}
-                </button>
-              ))}
+              {product.sizes.map((sizeObj) => {
+                const sizeName = typeof sizeObj === 'string' ? sizeObj : sizeObj.size;
+                return (
+                  <button
+                    key={sizeName}
+                    onClick={() => setSelectedSize(sizeName)}
+                    className={`px-4 py-2 border rounded-md transition-colors ${
+                      selectedSize === sizeName
+                        ? "border-highlight bg-highlight text-white"
+                        : "border-input hover:border-highlight"
+                    }`}
+                  >
+                    {sizeName}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
