@@ -60,28 +60,20 @@ export default function SignUpPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">First Name</label>
+                <label className="block text-sm font-medium mb-1">Full Name</label>
                 <Input
-                  {...register("firstName")}
-                  error={errors.firstName?.message}
+                  {...register("name")}
+                  error={errors.name?.message}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Last Name</label>
+                <label className="block text-sm font-medium mb-1">Email</label>
                 <Input
-                  {...register("lastName")}
-                  error={errors.lastName?.message}
+                  type="email"
+                  {...register("email")}
+                  error={errors.email?.message}
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Email</label>
-              <Input
-                type="email"
-                {...register("email")}
-                error={errors.email?.message}
-              />
             </div>
 
             <div>

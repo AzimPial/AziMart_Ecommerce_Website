@@ -4,7 +4,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  error?: boolean;
+  error?: string | boolean;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
@@ -28,7 +28,7 @@ Input.displayName = "Input";
 export { Input };
 
 export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  error?: boolean;
+  error?: string | boolean;
 }
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
