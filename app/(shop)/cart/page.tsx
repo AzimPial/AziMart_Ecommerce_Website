@@ -19,6 +19,7 @@ export default function CartPage() {
   const [promoCode, setPromoCode] = useState("");
   const [promoDiscount, setPromoDiscount] = useState(0);
 
+  // Fixed: use getTotal() for subtotal
   const subtotal = getTotal();
   const totalItems = getItemCount();
   const shipping = subtotal >= 100 ? 0 : 9.99;
