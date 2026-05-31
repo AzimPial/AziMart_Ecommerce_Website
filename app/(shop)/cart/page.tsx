@@ -11,7 +11,7 @@ import { formatPrice } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
 
-export function CartPage() {
+export default function CartPage() {
   const { items, updateQuantity, removeItem, getSubtotal, getTotalItems, clearCart } = useCartStore();
   const { addItem: addToWishlist } = useWishlistStore();
   const { openWishlist } = useUIStore();

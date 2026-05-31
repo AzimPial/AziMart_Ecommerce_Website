@@ -28,7 +28,7 @@ declare module "next-auth/jwt" {
   }
 }
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+export const authOptions = {
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -44,28 +44,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials: any) {
         const parsedCredentials = loginSchema.safeParse(credentials);
-
-        if (!parsedCredentials.success) {
-          return null;
-        }
+        if (!parsedCredentials.success) return null;
 
         const { email, password } = parsedCredentials.data;
-
         await dbConnect();
 
         const user = await User.findOne({ email }).select("+password");
-
-        if (!user || !user.password) {
-          return null;
-        }
+        if (!user || !user.password) return null;
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
-
-        if (!isPasswordValid) {
-          return null;
-        }
+        if (!isPasswordValid) return null;
 
         return {
           id: user._id.toString(),
@@ -78,35 +68,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user, trigger }) {
+    async jwt({ token, user }: any) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
       }
-
-      // Handle session update
-      if (trigger === "update") {
-        const sessionUser = token as typeof token & { name?: string; email?: string; image?: string };
-        if (sessionUser.name) token.name = sessionUser.name;
-        if (sessionUser.email) token.email = sessionUser.email;
-        if (sessionUser.image) token.image = sessionUser.image;
-      }
-
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: any) {
       if (token) {
         session.user.id = token.id as string;
         session.user.role = token.role;
       }
       return session;
     },
-    async signIn({ user, account }) {
+    async signIn({ user, account }: any) {
       if (account?.provider === "google" || account?.provider === "facebook") {
         await dbConnect();
-
         const existingUser = await User.findOne({ email: user.email });
-
         if (!existingUser) {
           const newUser = new User({
             name: user.name || "User",
@@ -115,24 +94,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             role: "user",
             addresses: [],
           });
-
           await newUser.save();
         }
       }
-
       return true;
     },
   },
   pages: {
-    signIn: "/login",
-    error: "/login",
+    signIn: "/signin",
+    error: "/signin",
   },
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
   trustHost: true,
-});
+};
+
+export const { handlers, signIn, signOut, auth } = NextAuth(authOptions);
 
 export async function getSession() {
   return await auth();

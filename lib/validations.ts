@@ -6,6 +6,8 @@ export const loginSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
+export const signInSchema = loginSchema;
+
 export const registerSchema = z
   .object({
     name: z.string().min(2, "Name must be at least 2 characters").max(50, "Name must be less than 50 characters"),
@@ -21,6 +23,8 @@ export const registerSchema = z
     message: "Passwords do not match",
     path: ["confirmPassword"],
   });
+
+export const signUpSchema = registerSchema;
 
 export const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
